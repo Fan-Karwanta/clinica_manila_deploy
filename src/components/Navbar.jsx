@@ -13,7 +13,7 @@ const Navbar = () => {
   const [showNotifications, setShowNotifications] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
-  const { token, setToken, userData, backendUrl, setState, setLoginState } = useContext(AppContext)
+  const { token, setToken, userData, backendUrl, loginState, setLoginState, setShowForgotPassword } = useContext(AppContext)
 
   // Add months array for date formatting
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -228,12 +228,14 @@ const Navbar = () => {
             <button onClick={() => {
               navigateSafely('/login');
               setLoginState('Sign Up');
+              setShowForgotPassword(false);
             }} className='bg-primary text-white px-6 py-2.5 rounded-full font-light hover:bg-primary/90 transition-colors'>
               Sign up
             </button>
             <button onClick={() => {
               navigateSafely('/login');
               setLoginState('Login');
+              setShowForgotPassword(false);
             }} className='border-2 border-primary text-primary px-6 py-2.5 rounded-full font-light hover:bg-primary/5 transition-colors'>
               Login
             </button>
@@ -366,6 +368,7 @@ const Navbar = () => {
                     <button onClick={() => {
                       navigateSafely('/login');
                       setLoginState('Sign Up');
+                      setShowForgotPassword(false);
                       setShowMenu(false);
                     }} className='bg-primary text-white px-6 py-2.5 rounded-full font-light hover:bg-primary/90 transition-colors'>
                       Sign up
@@ -373,6 +376,7 @@ const Navbar = () => {
                     <button onClick={() => {
                       navigateSafely('/login');
                       setLoginState('Login');
+                      setShowForgotPassword(false);
                       setShowMenu(false);
                     }} className='border-2 border-primary text-primary px-6 py-2.5 rounded-full font-light hover:bg-primary/5 transition-colors'>
                       Login

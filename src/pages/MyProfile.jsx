@@ -12,10 +12,8 @@ const MyProfile = () => {
 
     const [resetPasswordLoading, setResetPasswordLoading] = useState(false)
     const [showResetPasswordModal, setShowResetPasswordModal] = useState(false)
-    const [oldPassword, setOldPassword] = useState('')
     const [newPassword, setNewPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
-    const [showOldPassword, setShowOldPassword] = useState(false)
     const [showNewPassword, setShowNewPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [passwordStrength, setPasswordStrength] = useState({
@@ -29,6 +27,11 @@ const MyProfile = () => {
 
     // Function to update user profile data using API
     const updateUserProfileData = async () => {
+        // Validate phone number has at least 10 digits
+        if (userData.phone.length < 10) {
+            toast.error('Phone number must have at least 10 digits');
+            return;
+        }
 
         try {
 
@@ -40,7 +43,7 @@ const MyProfile = () => {
             formData.append('phone', userData.phone)
             formData.append('address', JSON.stringify(userData.address))
             formData.append('gender', userData.gender)
-            formData.append('dob', userData.dob)
+            formData.append('dob', userData.dob) // Keep DOB in form data but it won't be editable in UI
 
             image && formData.append('image', image)
 
@@ -92,11 +95,6 @@ const MyProfile = () => {
 
     // Handle reset password request
     const handleResetPassword = async () => {
-        if (!oldPassword) {
-            toast.error('Please enter your current password');
-            return;
-        }
-
         if (!newPassword || !confirmPassword) {
             toast.error('Please enter and confirm your new password');
             return;
@@ -127,7 +125,6 @@ const MyProfile = () => {
                 const { data } = await axios.post(
                     `${backendUrl}/api/user/reset-password/${tokenResponse.data.resetToken}`, 
                     {
-                        oldPassword,
                         newPassword,
                         confirmPassword
                     }
@@ -153,10 +150,8 @@ const MyProfile = () => {
 
     // Reset the password form
     const resetPasswordForm = () => {
-        setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
-        setShowOldPassword(false);
         setShowNewPassword(false);
         setShowConfirmPassword(false);
         setPasswordStrength({
@@ -211,7 +206,17 @@ const MyProfile = () => {
                     <p className='font-medium'>Phone:</p>
 
                     {isEdit
-                        ? <input className='bg-gray-50 max-w-52' type="text" onChange={(e) => setUserData(prev => ({ ...prev, phone: e.target.value }))} value={userData.phone} />
+                        ? <input 
+                            className='bg-gray-50 max-w-52 border border-gray-300 rounded px-2 py-1' 
+                            type="text" 
+                            onChange={(e) => {
+                                // Only allow digits in phone number
+                                const value = e.target.value.replace(/\D/g, '');
+                                setUserData(prev => ({ ...prev, phone: value }));
+                            }} 
+                            value={userData.phone}
+                            placeholder="Enter at least 10 digits"
+                          />
                         : <p className='text-blue-500'>{userData.phone}</p>
                     }
 
@@ -219,9 +224,21 @@ const MyProfile = () => {
 
                     {isEdit
                         ? <p>
-                            <input className='bg-gray-50' type="text" onChange={(e) => setUserData(prev => ({ ...prev, address: { ...prev.address, line1: e.target.value } }))} value={userData.address.line1} />
+                            <input 
+                              className='bg-gray-50 border border-gray-300 rounded px-2 py-1 w-full mb-2 text-gray-600' 
+                              type="text" 
+                              onChange={(e) => setUserData(prev => ({ ...prev, address: { ...prev.address, line1: e.target.value } }))} 
+                              value={userData.address.line1}
+                              placeholder="Address Line 1"
+                            />
                             <br />
-                            <input className='bg-gray-50' type="text" onChange={(e) => setUserData(prev => ({ ...prev, address: { ...prev.address, line2: e.target.value } }))} value={userData.address.line2} /></p>
+                            <input 
+                              className='bg-gray-50 border border-gray-300 rounded px-2 py-1 w-full text-gray-600' 
+                              type="text" 
+                              onChange={(e) => setUserData(prev => ({ ...prev, address: { ...prev.address, line2: e.target.value } }))} 
+                              value={userData.address.line2}
+                              placeholder="Address Line 2 (Optional)"
+                            /></p>
                         : <p className='text-gray-500'>{userData.address.line1} <br /> {userData.address.line2}</p>
                     }
 
@@ -233,7 +250,7 @@ const MyProfile = () => {
                     <p className='font-medium'>Gender:</p>
 
                     {isEdit
-                        ? <select className='max-w-20 bg-gray-50' onChange={(e) => setUserData(prev => ({ ...prev, gender: e.target.value }))} value={userData.gender} >
+                        ? <select className='max-w-20 bg-gray-50 border border-gray-300 rounded px-2 py-1' onChange={(e) => setUserData(prev => ({ ...prev, gender: e.target.value }))} value={userData.gender} >
                             <option value="Not Selected">Not Selected</option>
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
@@ -243,10 +260,8 @@ const MyProfile = () => {
 
                     <p className='font-medium'>Birthday:</p>
 
-                    {isEdit
-                        ? <input className='max-w-28 bg-gray-50' type='date' onChange={(e) => setUserData(prev => ({ ...prev, dob: e.target.value }))} value={userData.dob} />
-                        : <p className='text-gray-500'>{userData.dob}</p>
-                    }
+                    {/* Birthday is not editable */}
+                    <p className='text-gray-500'>{userData.dob}</p>
 
                 </div>
             </div>
@@ -272,28 +287,7 @@ const MyProfile = () => {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-8 max-w-md w-full">
                         <h2 className="text-2xl font-semibold mb-4">Reset Password</h2>
-                        <p className="text-gray-600 mb-6">Please enter your current password and create a new password.</p>
-                        
-                        <div className="mb-4">
-                            <label className="block text-gray-700 mb-2">Current Password</label>
-                            <div className="relative">
-                                <input 
-                                    type={showOldPassword ? "text" : "password"} 
-                                    value={oldPassword}
-                                    onChange={(e) => setOldPassword(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    placeholder="Enter your current password"
-                                />
-                                <label className="flex items-center gap-2 text-sm mt-1">
-                                    <input
-                                        type="checkbox"
-                                        checked={showOldPassword}
-                                        onChange={(e) => setShowOldPassword(e.target.checked)}
-                                    />
-                                    Show Password
-                                </label>
-                            </div>
-                        </div>
+                        <p className="text-gray-600 mb-6">Please create a new password for your account.</p>
                         
                         <div className="mb-4">
                             <label className="block text-gray-700 mb-2">New Password</label>

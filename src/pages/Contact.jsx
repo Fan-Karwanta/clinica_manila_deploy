@@ -13,11 +13,11 @@ const Contact = () => {
         <img className='w-full md:max-w-[360px]' src={assets.contact_image} alt="" />
         <div className='flex flex-col justify-center items-start gap-6'>
           <p className=' font-semibold text-lg text-gray-600'>OUR OFFICE</p>
-          <p className=' text-gray-500'>Poblacion, <br />  General Santos City</p>
-          <p className=' text-gray-500'>Tel: 0927-171-199-48 <br /> Email: clinica_manila@gmail.com</p>
+          <p className=' text-gray-500'>2nd Floor, building a, <br />  SM Megamall, Mandaluyong City</p>
+          <p className=' text-gray-500'>Contact No's:  +632 8661 7777: +632 8661 9690” <br /> Email: clinica_manila@gmail.com</p>
           <p className=' font-semibold text-lg text-gray-600'>Learn More About Us</p>
-          <p className=' text-gray-500'>Learn more about Clinica Manila and it's development.</p>
-          <button className='border border-black px-8 py-4 text-sm hover:bg-black hover:text-white transition-all duration-500'>Learn More</button>
+          <p className=' text-gray-500'>Learn more about Clinica Manila.</p>
+          <button onClick={() => window.open('https://youtu.be/_dIBnNsx3xA?si=2zXckblk7ghUUCtN', '_blank')} className='border border-black px-8 py-4 text-sm hover:bg-black hover:text-white transition-all duration-500'>Learn More</button>
         </div>
       </div>
 

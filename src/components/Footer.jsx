@@ -1,7 +1,9 @@
 import React from 'react'
 import { assets } from '../assets/assets'
+import { Link, useNavigate } from 'react-router-dom'
 
 const Footer = () => {
+  const navigate = useNavigate()
   return (
     <div className='md:mx-10'>
       <div className='flex flex-col sm:grid grid-cols-[3fr_1fr_1fr] gap-14 my-10  mt-40 text-sm'>
@@ -14,18 +16,42 @@ const Footer = () => {
         <div>
           <p className='text-xl font-medium mb-5'>Clinica Manila</p>
           <ul className='flex flex-col gap-2 text-gray-600'>
-            <li>Home</li>
-            <li>About us</li>
-            <li>Delivery</li>
-            <li>Privacy policy</li>
+            <li>
+              <Link to="/" className="hover:text-primary cursor-pointer transition-colors">
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link to="/about" className="hover:text-primary cursor-pointer transition-colors">
+                About us
+              </Link>
+            </li>
+            <li>
+              <Link to="/terms" className="hover:text-primary cursor-pointer transition-colors">
+                Terms & Conditions
+              </Link>
+            </li>
           </ul>
         </div>
 
         <div>
           <p className='text-xl font-medium mb-5'>GET IN TOUCH</p>
           <ul className='flex flex-col gap-2 text-gray-600'>
-            <li>0927-171-199-48</li>
-            <li>clinica_manila@gmail.com</li>
+            <li>
+              <a href="tel:+632 8661 7777" className="hover:text-primary cursor-pointer transition-colors">
+              +632 8661 7777
+              </a>
+            </li>
+            <li>
+              <a href="mailto:clinica_manila.supp@gmail.com" className="hover:text-primary cursor-pointer transition-colors">
+                clinica.manila.supp@gmail.com
+              </a>
+            </li>
+            <li>
+              <Link to="/contact" className="hover:text-primary cursor-pointer transition-colors">
+                Contact Us
+              </Link>
+            </li>
           </ul>
         </div>
 

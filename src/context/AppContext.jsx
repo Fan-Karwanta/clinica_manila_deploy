@@ -14,6 +14,7 @@ const AppContextProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loginState, setLoginState] = useState('Sign Up');
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
 
     // Initialize token from localStorage
     useEffect(() => {
@@ -136,6 +137,8 @@ const AppContextProvider = ({ children }) => {
         markAllNotificationsAsRead,
         loginState,
         setLoginState,
+        showForgotPassword,
+        setShowForgotPassword,
         loadUserProfileData
     };
 

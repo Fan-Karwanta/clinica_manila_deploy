@@ -77,16 +77,31 @@ const Appointment = () => {
         return days
     }
 
-    // Function to check if a date is selectable (between 5 days and 1 month from now)
+    // Function to check if a date is selectable (at least 5 days from now and up to 1 month)
     const isDateSelectable = (date) => {
         if (!date) return false
+        
+        // Get today's date and reset time to start of day for accurate comparison
         const today = new Date()
-        const minDate = new Date(today)
-        minDate.setDate(today.getDate() + 4)
+        today.setHours(0, 0, 0, 0)
+        
+        // Get the date to check and reset time
+        const dateToCheck = new Date(date)
+        dateToCheck.setHours(0, 0, 0, 0)
+        
+        // Calculate the difference in days
+        const diffTime = dateToCheck.getTime() - today.getTime()
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+        
+        // Calculate maximum date (1 month from today)
         const maxDate = new Date(today)
         maxDate.setMonth(today.getMonth() + 1)
+        maxDate.setHours(23, 59, 59, 999)
         
-        return date >= minDate && date <= maxDate
+        // Date is selectable if it's at least 5 days in the future and within 1 month
+        // For example: If today is May 22, the first available date should be May 27 (5 days from today)
+        // This matches the backend validation which requires diffDays >= 5
+        return diffDays >= 5 && dateToCheck <= maxDate
     }
 
     // Fetch user's booked slots for the current month

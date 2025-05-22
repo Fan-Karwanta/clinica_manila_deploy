@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 
 const Login = () => {
   const location = useLocation()
-  const { loginState, setLoginState, backendUrl, setToken } = useContext(AppContext)
+  const { loginState, setLoginState, backendUrl, setToken, showForgotPassword, setShowForgotPassword } = useContext(AppContext)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [middleName, setMiddleName] = useState('')
@@ -29,11 +29,15 @@ const Login = () => {
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [loading, setLoading] = useState(false)
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
-  const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false)
   const emailTimeoutRef = useRef(null)
 
   const navigate = useNavigate()
+
+  // Reset showForgotPassword when loginState changes
+  useEffect(() => {
+    setShowForgotPassword(false)
+  }, [loginState])
 
   const handleToken = (token) => {
     localStorage.setItem('token', token);
@@ -279,7 +283,10 @@ const Login = () => {
             </button>
             
             <p>
-              Remember your password? <span onClick={() => setShowForgotPassword(false)} className='text-primary underline cursor-pointer'>Back to Login</span>
+              Remember your password? <span onClick={() => {
+                setShowForgotPassword(false);
+                setLoginState('Login');
+              }} className='text-primary underline cursor-pointer'>Back to Login</span>
             </p>
           </div>
         </form>
