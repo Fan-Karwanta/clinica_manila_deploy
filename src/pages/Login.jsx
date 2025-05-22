@@ -7,6 +7,14 @@ import { useNavigate, useLocation } from 'react-router-dom'
 const Login = () => {
   const location = useLocation()
   const { loginState, setLoginState, backendUrl, setToken, showForgotPassword, setShowForgotPassword } = useContext(AppContext)
+  
+  // Set initial login state based on URL path
+  useEffect(() => {
+    // If URL is exactly /login, show the login form instead of signup
+    if (location.pathname === '/login') {
+      setLoginState('Login')
+    }
+  }, [location.pathname, setLoginState])
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [middleName, setMiddleName] = useState('')
