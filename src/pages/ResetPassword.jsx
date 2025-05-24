@@ -10,10 +10,8 @@ const ResetPassword = () => {
   const { backendUrl } = useContext(AppContext)
   
   const [email, setEmail] = useState('')
-  const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [showOldPassword, setShowOldPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -92,7 +90,6 @@ const ResetPassword = () => {
 
     try {
       const { data } = await axios.post(`${backendUrl}/api/user/reset-password/${token}`, {
-        oldPassword,
         newPassword,
         confirmPassword
       });
@@ -148,7 +145,7 @@ const ResetPassword = () => {
     <form onSubmit={handleSubmit} className="min-h-[80vh] flex items-center">
       <div className="flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-[#5E5E5E] text-sm shadow-lg">
         <p className="text-2xl font-semibold">Reset Password</p>
-        <p>Please enter your old password and create a new password</p>
+        <p>Please enter a new password</p>
         
         <div className="w-full">
           <p>Email</p>
@@ -158,27 +155,6 @@ const ResetPassword = () => {
             type="email" 
             disabled
           />
-        </div>
-        
-        <div className="w-full">
-          <p>Old Password</p>
-          <div className="relative">
-            <input 
-              onChange={(e) => setOldPassword(e.target.value)} 
-              value={oldPassword} 
-              className="border border-[#DADADA] rounded w-full p-2 mt-1"
-              type={showOldPassword ? "text" : "password"}
-              required 
-            />
-            <label className="flex items-center gap-2 text-sm mt-1">
-              <input
-                type="checkbox"
-                checked={showOldPassword}
-                onChange={(e) => setShowOldPassword(e.target.checked)}
-              />
-              Show Password
-            </label>
-          </div>
         </div>
         
         <div className="w-full">

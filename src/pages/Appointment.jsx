@@ -24,6 +24,8 @@ const Appointment = () => {
     const [isFormDirty, setIsFormDirty] = useState(false)
     const [pendingNavigation, setPendingNavigation] = useState(null)
     const [userBookedSlots, setUserBookedSlots] = useState({})
+    const [userDoctorBookedDates, setUserDoctorBookedDates] = useState([])
+    const [appointmentReason, setAppointmentReason] = useState('')
 
     const navigate = useNavigate()
     const location = useLocation()
@@ -77,9 +79,23 @@ const Appointment = () => {
         return days
     }
 
+    // Function to check if a date is already booked with this doctor
+    const isAlreadyBookedWithDoctor = (date) => {
+        if (!date) return false
+        
+        // Format the date to check if it's in the user's booked dates for this doctor
+        const day = date.getDate()
+        const month = date.getMonth() + 1
+        const year = date.getFullYear()
+        const formattedDate = `${day}_${month}_${year}`
+        
+        // Check if the user has already booked this date with this doctor
+        return userDoctorBookedDates.includes(formattedDate)
+    }
+    
     // Function to check if a date is selectable (at least 5 days from now and up to 1 month)
     const isDateSelectable = (date) => {
-        if (!date) return false
+        if (!date || !docInfo) return false
         
         // Get today's date and reset time to start of day for accurate comparison
         const today = new Date()
@@ -98,10 +114,28 @@ const Appointment = () => {
         maxDate.setMonth(today.getMonth() + 1)
         maxDate.setHours(23, 59, 59, 999)
         
-        // Date is selectable if it's at least 5 days in the future and within 1 month
-        // For example: If today is May 22, the first available date should be May 27 (5 days from today)
-        // This matches the backend validation which requires diffDays >= 5
-        return diffDays >= 5 && dateToCheck <= maxDate
+        // Check if the date falls on the doctor's day off
+        const dayOfWeek = daysOfWeek[dateToCheck.getDay()]
+        const fullDayName = getDayFullName(dayOfWeek)
+        const isDayOff = docInfo.dayOff && fullDayName === docInfo.dayOff
+        
+        // Date is selectable if it's at least 5 days in the future, within 1 month,
+        // not already booked with this doctor, and not the doctor's day off
+        return diffDays >= 5 && dateToCheck <= maxDate && !isAlreadyBookedWithDoctor(date) && !isDayOff
+    }
+    
+    // Helper function to convert short day name to full day name
+    const getDayFullName = (shortDay) => {
+        switch(shortDay) {
+            case 'Mon': return 'Monday';
+            case 'Tue': return 'Tuesday';
+            case 'Wed': return 'Wednesday';
+            case 'Thu': return 'Thursday';
+            case 'Fri': return 'Friday';
+            case 'Sat': return 'Saturday';
+            case 'Sun': return 'Sunday';
+            default: return '';
+        }
     }
 
     // Fetch user's booked slots for the current month
@@ -134,6 +168,24 @@ const Appointment = () => {
             }
         } catch (error) {
             console.error('Error fetching user booked slots:', error);
+        }
+    };
+    
+    // Fetch user's booked dates with this specific doctor
+    const fetchUserDoctorBookedDates = async () => {
+        if (!token || !docId) return;
+        
+        try {
+            const { data } = await axios.get(
+                `${backendUrl}/api/user/doctor-booked-dates?docId=${docId}`,
+                { headers: { token } }
+            );
+            
+            if (data.success) {
+                setUserDoctorBookedDates(data.bookedDates);
+            }
+        } catch (error) {
+            console.error('Error fetching user-doctor booked dates:', error);
         }
     };
 
@@ -199,6 +251,11 @@ const Appointment = () => {
             return navigate('/login')
         }
 
+        if (!appointmentReason.trim()) {
+            toast.warning('Please provide a reason for your appointment')
+            return
+        }
+
         const date = selectedDate
 
         let day = date.getDate()
@@ -209,7 +266,7 @@ const Appointment = () => {
 
         try {
 
-            const { data } = await axios.post(backendUrl + '/api/user/book-appointment', { docId, slotDate, slotTime }, { headers: { token } })
+            const { data } = await axios.post(backendUrl + '/api/user/book-appointment', { docId, slotDate, slotTime, appointmentReason }, { headers: { token } })
             if (data.success) {
                 toast.success(data.message)
                 setIsFormDirty(false) // Reset form dirty state after successful booking
@@ -231,10 +288,11 @@ const Appointment = () => {
         }
     }, [doctors, docId])
 
-    // Fetch user's booked slots when the month changes
+    // Fetch user's booked slots and doctor-specific booked dates when the month changes or doctor changes
     useEffect(() => {
         fetchUserBookedSlots();
-    }, [currentMonth, token]);
+        fetchUserDoctorBookedDates();
+    }, [currentMonth, token, docId]);
 
     // If selected date changes and we already have user booked slots, update the time slots
     useEffect(() => {
@@ -329,27 +387,44 @@ const Appointment = () => {
 
                     {/* Calendar days */}
                     <div className="grid grid-cols-7">
-                        {getCalendarDays(currentMonth).map((date, index) => (
-                            <div
-                                key={index}
-                                onClick={() => handleDateClick(date)}
-                                className={`
-                                    p-2 border-t border-l first:border-l-0 text-center min-h-[80px]
-                                    ${!date ? 'bg-gray-50' : ''}
-                                    ${date && isDateSelectable(date) ? 'cursor-pointer hover:bg-gray-50' : 'cursor-not-allowed'}
-                                    ${date && selectedDate && date.toDateString() === selectedDate.toDateString() ? 'bg-primary text-white' : ''}
-                                    ${date && !isDateSelectable(date) ? 'text-gray-400' : ''}
-                                `}
-                            >
-                                {date ? (
-                                    <div className="flex flex-col items-center">
-                                        <span className={`text-lg ${date && isDateSelectable(date) ? 'font-semibold' : ''}`}>
-                                            {date.getDate()}
-                                        </span>
-                                    </div>
-                                ) : null}
-                            </div>
-                        ))}
+                        {getCalendarDays(currentMonth).map((date, index) => {
+                            // Check if this date is the doctor's day off
+                            let isDayOff = false;
+                            if (date && docInfo && docInfo.dayOff) {
+                                const dayOfWeek = daysOfWeek[date.getDay()];
+                                const fullDayName = getDayFullName(dayOfWeek);
+                                isDayOff = fullDayName === docInfo.dayOff;
+                            }
+                            
+                            return (
+                                <div
+                                    key={index}
+                                    onClick={() => handleDateClick(date)}
+                                    className={`
+                                        p-2 border-t border-l first:border-l-0 text-center min-h-[80px]
+                                        ${!date ? 'bg-gray-50' : ''}
+                                        ${date && isDateSelectable(date) ? 'cursor-pointer hover:bg-gray-50' : 'cursor-not-allowed'}
+                                        ${date && selectedDate && date.toDateString() === selectedDate.toDateString() ? 'bg-primary text-white' : ''}
+                                        ${date && !isDateSelectable(date) ? 'text-gray-400' : ''}
+                                        ${isDayOff ? 'bg-red-50' : ''}
+                                    `}
+                                >
+                                    {date ? (
+                                        <div className="flex flex-col items-center">
+                                            <span className={`text-lg ${date && isDateSelectable(date) ? 'font-semibold' : ''}`}>
+                                                {date.getDate()}
+                                            </span>
+                                            {isDayOff && (
+                                                <span className="text-xs text-red-500 mt-1">Doctor's Day Off</span>
+                                            )}
+                                            {date && !isDateSelectable(date) && isAlreadyBookedWithDoctor(date) && (
+                                                <span className="text-xs text-red-500 mt-1">Already booked</span>
+                                            )}
+                                        </div>
+                                    ) : null}
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -389,6 +464,25 @@ const Appointment = () => {
 <br />
                 {selectedDate && slotTime && (
                     <div className="flex flex-col items-center">
+                        {/* Appointment Reason Comment Box */}
+                        <div className="w-full max-w-xl mb-4">
+                            <label htmlFor="appointment-reason" className="block text-sm font-medium text-gray-700 mb-1">
+                                Appointment Reason <span className="text-red-500">*</span>
+                            </label>
+                            <textarea
+                                id="appointment-reason"
+                                value={appointmentReason}
+                                onChange={(e) => {
+                                    setAppointmentReason(e.target.value)
+                                    setIsFormDirty(true) // Mark form as dirty when reason is entered
+                                }}
+                                placeholder="Please describe the reason for your appointment..."
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                                rows={3}
+                                required
+                            />
+                        </div>
+                        
                         <div className="flex items-start mb-4 w-full max-w-xl bg-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm">
                             <input 
                                 type="checkbox" 

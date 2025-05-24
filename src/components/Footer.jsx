@@ -52,6 +52,11 @@ const Footer = () => {
                 Contact Us
               </Link>
             </li>
+            <li>
+              <Link to="/feedback" className="hover:text-primary cursor-pointer transition-colors">
+                Send Feedback
+              </Link>
+            </li>
           </ul>
         </div>
 

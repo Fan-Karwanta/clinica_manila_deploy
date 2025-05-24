@@ -4,6 +4,7 @@ import { AppContext } from '../context/AppContext'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { assets } from '../assets/assets'
+import AppointmentReasonModal from '../components/AppointmentReasonModal'
 
 const MyAppointments = () => {
 
@@ -13,6 +14,11 @@ const MyAppointments = () => {
     const [appointments, setAppointments] = useState([])
     const [previousAppointments, setPreviousAppointments] = useState([])
     const [payment, setPayment] = useState('')
+    
+    // State for reason modals
+    const [showReasonModal, setShowReasonModal] = useState(false)
+    const [selectedReason, setSelectedReason] = useState('')
+    const [reasonModalTitle, setReasonModalTitle] = useState('Appointment Reason')
 
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -193,21 +199,60 @@ const MyAppointments = () => {
                             <p className=''>{item.docData.address.line1}</p>
                             <p className=''>{item.docData.address.line2}</p>
                             <p className=' mt-1'><span className='text-sm text-[#3C3C3C] font-medium'>Date & Time:</span> {slotDateFormat(item.slotDate)} |  {item.slotTime}</p>
+                            {item.appointmentReason && (
+                                <button 
+                                    onClick={() => {
+                                        setSelectedReason(item.appointmentReason);
+                                        setReasonModalTitle('Appointment Reason');
+                                        setShowReasonModal(true);
+                                    }}
+                                    className="mt-2 text-sm px-3 py-1 bg-[#EAEFFF] text-primary border border-primary/20 rounded-full hover:bg-primary/10 transition-colors"
+                                >
+                                    View Appointment Reason
+                                </button>
+                            )}
+                            {item.consultationSummary && (
+                                <button 
+                                    onClick={() => {
+                                        setSelectedReason(item.consultationSummary);
+                                        setReasonModalTitle('Consultation Summary');
+                                        setShowReasonModal(true);
+                                    }}
+                                    className="mt-2 ml-2 text-sm px-3 py-1 bg-green-50 text-green-600 border border-green-200 rounded-full hover:bg-green-100 transition-colors"
+                                >
+                                    View Consultation Summary
+                                </button>
+                            )}
                         </div>
                         <div></div>
                         <div className='flex flex-col gap-2 justify-end text-sm text-center'>
                             {!item.cancelled && item.payment && !item.isCompleted && <button className='sm:min-w-48 py-2 border rounded text-[#696969]  bg-[#EAEFFF]'>Paid</button>}
 
-                            {item.isCompleted && <button className='sm:min-w-48 py-2 border border-green-500 rounded text-green-500'>Approved</button>}
+                            {item.isCompleted && (
+                                <div>
+                                    <button className='sm:min-w-48 py-2 border border-green-500 rounded text-green-500'>Approved</button>
+                                    {!item.consultationSummary && (
+                                        <p className="text-xs text-gray-500 mt-1">Consultation summary pending</p>
+                                    )}
+                                </div>
+                            )}
 
                             {!item.cancelled && !item.isCompleted && <button onClick={() => cancelAppointment(item._id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-red-600 hover:text-white transition-all duration-300'>Cancel appointment</button>}
                             {item.cancelled && !item.isCompleted && (
                                 <div>
                                     <button className='sm:min-w-48 py-2 border border-red-500 rounded text-red-500'>Appointment cancelled</button>
                                     {item.cancellationReason && (
-                                        <div className="mt-2 p-2 bg-red-50 border border-red-100 rounded text-left">
-                                            <p className="text-xs font-medium text-gray-700">Cancellation reason:</p>
-                                            <p className="text-xs text-gray-600">{item.cancellationReason}</p>
+                                        <div className="mt-2 text-center">
+                                            <button 
+                                                onClick={() => {
+                                                    setSelectedReason(item.cancellationReason);
+                                                    setReasonModalTitle('Cancellation Reason');
+                                                    setShowReasonModal(true);
+                                                }}
+                                                className="text-sm px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full hover:bg-red-100 transition-colors"
+                                            >
+                                                View Reason
+                                            </button>
                                             <p className="text-xs italic text-gray-500 mt-1">
                                                 {item.cancelledBy === 'admin' ? 'Cancelled by admin' : 
                                                  item.cancelledBy === 'doctor' ? `Cancelled by Dr. ${item.docData.name}` : 
@@ -221,6 +266,17 @@ const MyAppointments = () => {
                     </div>
                 ))}
             </div>
+            
+            {/* Reason Modal */}
+            <AppointmentReasonModal
+                isOpen={showReasonModal}
+                onClose={() => {
+                    setShowReasonModal(false);
+                    setSelectedReason('');
+                }}
+                appointmentReason={selectedReason}
+                title={reasonModalTitle}
+            />
         </div>
     )
 }
