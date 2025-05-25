@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import axios from 'axios'
@@ -8,8 +8,13 @@ import AppointmentReasonModal from '../components/AppointmentReasonModal'
 
 const MyAppointments = () => {
 
-    const { backendUrl, token, addNotification } = useContext(AppContext)
+    const { backendUrl, token, addNotification, loadUserProfileData } = useContext(AppContext)
     const navigate = useNavigate()
+    
+    // Add loading state to prevent premature API calls
+    const [isLoading, setIsLoading] = useState(true)
+    const [isAuthenticated, setIsAuthenticated] = useState(!!token)
+    const eventSourceRef = useRef(null)
 
     const [appointments, setAppointments] = useState([])
     const [previousAppointments, setPreviousAppointments] = useState([])
@@ -31,14 +36,15 @@ const MyAppointments = () => {
 
     // Getting User Appointments Data Using API
     const getUserAppointments = async () => {
+        if (!token) {
+            setIsLoading(false)
+            return
+        }
+        
         try {
+            setIsLoading(true)
             const { data } = await axios.get(backendUrl + '/api/user/appointments', { headers: { token } })
             const newAppointments = data.appointments.reverse()
-            
-            // Log the structure of the first appointment if it exists
-            if (newAppointments.length > 0) {
-                console.log('Appointment structure:', newAppointments[0])
-            }
             
             // Check for status changes
             if (previousAppointments.length > 0) {
@@ -64,10 +70,26 @@ const MyAppointments = () => {
             
             setAppointments(newAppointments)
             setPreviousAppointments(newAppointments)
+            setIsAuthenticated(true)
 
         } catch (error) {
-            console.log(error)
-            toast.error(error.message)
+            console.error('Error fetching appointments:', error)
+            
+            if (error.response && error.response.status === 401) {
+                // Token might be expired, try to refresh user data
+                try {
+                    await loadUserProfileData()
+                    // If loadUserProfileData succeeds, retry getting appointments
+                    getUserAppointments()
+                } catch (refreshError) {
+                    setIsAuthenticated(false)
+                    toast.error('Authentication error. Please log in again.')
+                }
+            } else {
+                toast.error(error.response?.data?.message || error.message || 'Error loading appointments')
+            }
+        } finally {
+            setIsLoading(false)
         }
     }
 
@@ -152,40 +174,103 @@ const MyAppointments = () => {
         }
     }
 
+    // Check authentication and load appointments when component mounts or token changes
     useEffect(() => {
-        if (token) {
-            getUserAppointments()
+        const checkAuthAndLoadData = async () => {
+            if (token) {
+                try {
+                    // Verify token is valid by loading user profile
+                    await loadUserProfileData()
+                    setIsAuthenticated(true)
+                    getUserAppointments()
+                } catch (error) {
+                    setIsAuthenticated(false)
+                    setIsLoading(false)
+                }
+            } else {
+                setIsAuthenticated(false)
+                setIsLoading(false)
+            }
         }
+        
+        checkAuthAndLoadData()
     }, [token])
 
     // Add WebSocket or Server-Sent Events listener for real-time updates
     useEffect(() => {
-        if (!token) return;
-
-        // Create EventSource for SSE
-        const eventSource = new EventSource(`${backendUrl}/api/user/appointment-updates?token=${token.replace('Bearer ', '')}`);
-        
-        eventSource.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 'appointment_update') {
-                addNotification(data.message);
-                getUserAppointments(); // Refresh appointments list
+        // Only set up EventSource if authenticated
+        if (!token || !isAuthenticated) {
+            if (eventSourceRef.current) {
+                eventSourceRef.current.close()
+                eventSourceRef.current = null
             }
-        };
+            return
+        }
 
-        eventSource.onerror = (error) => {
-            console.error('SSE Error:', error);
-            eventSource.close();
-        };
+        // Close any existing connection
+        if (eventSourceRef.current) {
+            eventSourceRef.current.close()
+        }
+
+        // Create EventSource for SSE with error handling
+        try {
+            const cleanToken = token.replace('Bearer ', '')
+            eventSourceRef.current = new EventSource(`${backendUrl}/api/user/appointment-updates?token=${cleanToken}`);
+            
+            eventSourceRef.current.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'appointment_update') {
+                        addNotification(data.message);
+                        getUserAppointments(); // Refresh appointments list
+                    }
+                } catch (parseError) {
+                    console.error('Error parsing SSE message:', parseError);
+                }
+            };
+
+            eventSourceRef.current.onerror = (error) => {
+                console.error('SSE Error:', error);
+                // Don't immediately close on error - the browser will try to reconnect
+                // Only close if we detect an auth error (401)
+                if (error.status === 401) {
+                    eventSourceRef.current.close();
+                    eventSourceRef.current = null;
+                }
+            };
+        } catch (error) {
+            console.error('Error setting up EventSource:', error);
+        }
 
         return () => {
-            eventSource.close();
+            if (eventSourceRef.current) {
+                eventSourceRef.current.close();
+                eventSourceRef.current = null;
+            }
         };
-    }, [token, backendUrl]);
+    }, [token, backendUrl, isAuthenticated]);
 
     return (
         <div>
             <p className='pb-3 mt-12 text-lg font-medium text-gray-600 border-b'>My appointments</p>
+            
+            {isLoading && (
+                <div className="flex justify-center items-center py-10">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+                </div>
+            )}
+            
+            {!isLoading && !isAuthenticated && (
+                <div className="py-8 text-center">
+                    <p className="text-gray-600 mb-4">Please log in to view your appointments</p>
+                    <button 
+                        onClick={() => navigate('/login')} 
+                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                    >
+                        Go to Login
+                    </button>
+                </div>
+            )}
             <div className=''>
                 {appointments.map((item, index) => (
                     <div key={index} className='grid grid-cols-[1fr_2fr] gap-4 sm:flex sm:gap-6 py-4 border-b'>
