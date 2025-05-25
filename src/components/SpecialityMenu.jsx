@@ -4,6 +4,28 @@ import { Link } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 
 const SpecialityMenu = () => {
+    // Utility function to format specialty names
+    const formatSpecialty = (specialty) => {
+        // Replace underscores with spaces for display purposes
+        if (!specialty) return '';
+        
+        // Handle specific cases
+        if (specialty === 'Internal_Medicine') return 'Internal Medicine';
+        if (specialty === 'General_Physician') return 'General Physician';
+        
+        // General case: replace all underscores with spaces
+        return specialty.replace(/_/g, ' ');
+    };
+
+    // Utility function to get URL-friendly specialty name
+    const getSpecialtyUrlParam = (displayName) => {
+        if (displayName === 'Internal Medicine') return 'Internal_Medicine';
+        if (displayName === 'General Physician') return 'General_Physician';
+        if (displayName === 'Obgynecology') return 'Obgynecologist';
+        if (displayName === 'Ophthalmology') return 'Ophthalmologist';
+        return displayName;
+    };
+    
     const { doctors } = useContext(AppContext)
     
     // Get unique specialties that have at least one doctor
@@ -42,10 +64,7 @@ const SpecialityMenu = () => {
             <div className='flex sm:justify-center gap-8 pt-8 w-full overflow-x-auto px-4 pb-4'>
                 {filteredSpecialityData.map((item, index) => (
                     <Link 
-                        to={`/doctors/${item.speciality === 'Internal Medicine' ? 'Internal_Medicine' : 
-                              item.speciality === 'Obgynecology' ? 'Obgynecologist' : 
-                              item.speciality === 'Ophthalmology' ? 'Ophthalmologist' : 
-                              item.speciality}`} 
+                        to={`/doctors/${getSpecialtyUrlParam(item.speciality)}`} 
                         onClick={() => scrollTo(0, 0)} 
                         className='flex flex-col items-center text-sm cursor-pointer flex-shrink-0 hover:-translate-y-2 transition-all duration-300' 
                         key={index}

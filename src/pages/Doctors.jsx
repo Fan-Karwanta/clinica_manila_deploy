@@ -6,13 +6,14 @@ const Doctors = () => {
   // Utility function to format specialty names
   const formatSpecialty = (specialty) => {
     // Replace underscores with spaces for display purposes
-    if (specialty === 'Internal_Medicine') {
-      return 'Internal Medicine';
-    }
-    if (specialty === 'General_Physician') {
-      return 'General Physician';
-    }
-    return specialty;
+    if (!specialty) return '';
+    
+    // Handle specific cases
+    if (specialty === 'Internal_Medicine') return 'Internal Medicine';
+    if (specialty === 'General_Physician') return 'General Physician';
+    
+    // General case: replace all underscores with spaces
+    return specialty.replace(/_/g, ' ');
   };
 
   const { speciality } = useParams()
