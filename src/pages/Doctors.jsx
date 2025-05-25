@@ -9,8 +9,8 @@ const Doctors = () => {
     if (specialty === 'Internal_Medicine') {
       return 'Internal Medicine';
     }
-    if (specialty === 'General_Physical') {
-      return 'General Physical';
+    if (specialty === 'General_Physician') {
+      return 'General Physician';
     }
     return specialty;
   };
