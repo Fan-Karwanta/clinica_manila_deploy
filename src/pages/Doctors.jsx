@@ -3,6 +3,17 @@ import { AppContext } from '../context/AppContext'
 import { useNavigate, useParams } from 'react-router-dom'
 
 const Doctors = () => {
+  // Utility function to format specialty names
+  const formatSpecialty = (specialty) => {
+    // Replace underscores with spaces for display purposes
+    if (specialty === 'Internal_Medicine') {
+      return 'Internal Medicine';
+    }
+    if (specialty === 'General_Physical') {
+      return 'General Physical';
+    }
+    return specialty;
+  };
 
   const { speciality } = useParams()
 
@@ -53,7 +64,7 @@ const Doctors = () => {
                 onClick={() => speciality === specialty ? navigate('/doctors') : navigate(`/doctors/${specialty}`)}
                 className={`w-[94vw] sm:w-auto pl-3 py-1.5 pr-16 border border-gray-300 rounded transition-all cursor-pointer ${speciality === specialty ? 'bg-[#E2E5FF] text-black ' : ''}`}
               >
-                {specialty === 'Internal_Medicine' ? 'Internal Medicine' : specialty}
+                {formatSpecialty(specialty)}
               </p>
             ))
           ) : (
