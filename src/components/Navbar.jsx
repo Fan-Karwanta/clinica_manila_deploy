@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react'
 import { assets } from '../assets/assets'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
-import { IoNotificationsOutline, IoClose, IoHomeOutline, IoPersonOutline, IoInformationCircleOutline, IoMailOutline, IoDocumentTextOutline, IoCalendarOutline, IoLogOutOutline } from 'react-icons/io5'
+import { IoNotificationsOutline, IoClose, IoHomeOutline, IoPersonOutline, IoInformationCircleOutline, IoMailOutline, IoDocumentTextOutline, IoCalendarOutline, IoLogOutOutline, IoHelpCircleOutline } from 'react-icons/io5'
 import axios from 'axios'
 import { useNavigation } from '../context/NavigationContext'
 
@@ -146,6 +146,13 @@ const Navbar = () => {
           navigateSafely('/terms');
         }}>
           <li className='py-1 hover:text-primary transition-colors'>TERMS & CONDITIONS</li>
+          <hr className='border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden' />
+        </NavLink>
+        <NavLink to='/faq' onClick={(e) => {
+          e.preventDefault();
+          navigateSafely('/faq');
+        }}>
+          <li className='py-1 hover:text-primary transition-colors'>FAQ</li>
           <hr className='border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden' />
         </NavLink>
       </ul>
@@ -301,6 +308,13 @@ const Navbar = () => {
                     }}>
                       <li className='flex items-center gap-2 hover:text-primary transition-colors'><IoDocumentTextOutline className='text-lg' /> TERMS & CONDITIONS</li>
                     </NavLink>
+                    <NavLink to='/faq' onClick={(e) => {
+                      e.preventDefault();
+                      navigateSafely('/faq');
+                      setShowMenu(false);
+                    }}>
+                      <li className='flex items-center gap-2 hover:text-primary transition-colors'><IoHelpCircleOutline className='text-lg' /> FAQ</li>
+                    </NavLink>
                     <hr className='border-gray-200 my-4' />
                     {/* User specific links */}
                     <NavLink to='/my-profile' onClick={(e) => {
@@ -360,6 +374,13 @@ const Navbar = () => {
                       setShowMenu(false);
                     }}>
                       <li className='flex items-center gap-2 hover:text-primary transition-colors'><IoDocumentTextOutline className='text-lg' /> TERMS & CONDITIONS</li>
+                    </NavLink>
+                    <NavLink to='/faq' onClick={(e) => {
+                      e.preventDefault();
+                      navigateSafely('/faq');
+                      setShowMenu(false);
+                    }}>
+                      <li className='flex items-center gap-2 hover:text-primary transition-colors'><IoHelpCircleOutline className='text-lg' /> FAQ</li>
                     </NavLink>
                   </ul>
                   

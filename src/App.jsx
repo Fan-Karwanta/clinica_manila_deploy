@@ -16,6 +16,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Verify from './pages/Verify'
 import Terms from './pages/Terms'
 import Feedback from './pages/Feedback'
+import FAQ from './pages/FAQ'
 import { NavigationProvider } from './context/NavigationContext'
 
 const App = () => {
@@ -38,6 +39,7 @@ const App = () => {
           <Route path='/verify' element={<Verify />} />
           <Route path='/terms' element={<Terms />} />
           <Route path='/feedback' element={<Feedback />} />
+          <Route path='/faq' element={<FAQ />} />
         </Routes>
         <Footer />
       </div>

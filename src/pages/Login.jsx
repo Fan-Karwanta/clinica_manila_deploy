@@ -3,6 +3,7 @@ import { AppContext } from '../context/AppContext'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useNavigate, useLocation } from 'react-router-dom'
+import ReCAPTCHA from 'react-google-recaptcha'
 
 const Login = () => {
   const location = useLocation()
@@ -38,6 +39,8 @@ const Login = () => {
   const [loading, setLoading] = useState(false)
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false)
+  const [recaptchaVerified, setRecaptchaVerified] = useState(false)
+  const recaptchaRef = useRef(null)
   const emailTimeoutRef = useRef(null)
 
   const navigate = useNavigate()
@@ -45,6 +48,14 @@ const Login = () => {
   // Reset showForgotPassword when loginState changes
   useEffect(() => {
     setShowForgotPassword(false)
+  }, [loginState])
+
+  // Reset recaptcha when loginState changes
+  useEffect(() => {
+    setRecaptchaVerified(false)
+    if (recaptchaRef.current) {
+      recaptchaRef.current.reset()
+    }
   }, [loginState])
 
   const handleToken = (token) => {
@@ -154,6 +165,11 @@ const Login = () => {
     checkPasswordStrength(newPassword);
   };
 
+  // Handle reCAPTCHA verification
+  const handleRecaptchaChange = (value) => {
+    setRecaptchaVerified(!!value);
+  };
+
   const onSubmitHandler = async (event) => {
     event.preventDefault()
     
@@ -181,6 +197,12 @@ const Login = () => {
       toast.error('You must be 18 years or older to register')
       return
     }
+
+    // Check if reCAPTCHA is verified for Sign Up
+    if (loginState === 'Sign Up' && !recaptchaVerified) {
+      toast.error('Please verify that you are not a robot')
+      return
+    }
     
     setLoading(true)
 
@@ -194,6 +216,10 @@ const Login = () => {
         formData.append('password', password)
         formData.append('validId', validId)
         formData.append('dob', dob)
+        // Add recaptcha response to the form data
+        if (recaptchaRef.current) {
+          formData.append('recaptchaToken', recaptchaRef.current.getValue())
+        }
 
         const { data } = await axios.post(
           `${backendUrl}/api/user/register`,
@@ -494,6 +520,22 @@ const Login = () => {
                     </p>
                   </span>
                 </label>
+              </div>
+            )}
+            
+            {/* Add reCAPTCHA component for Sign Up */}
+            {loginState === 'Sign Up' && (
+              <div className='w-full mt-3'>
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey="6LcHj0grAAAAADHyvXlvjNpSEyzcaGqZ7EVEGTOx"
+                  onChange={handleRecaptchaChange}
+                />
+                {!recaptchaVerified && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Please verify that you are not a robot
+                  </p>
+                )}
               </div>
             )}
             

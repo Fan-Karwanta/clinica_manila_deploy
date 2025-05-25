@@ -25,7 +25,12 @@ const Doctors = () => {
 
   const applyFilter = () => {
     if (speciality) {
-      setFilterDoc(doctors.filter(doc => doc.speciality === speciality))
+      // Handle the special case for Internal_Medicine
+      if (speciality === 'Internal_Medicine') {
+        setFilterDoc(doctors.filter(doc => doc.speciality === 'Internal_Medicine'))
+      } else {
+        setFilterDoc(doctors.filter(doc => doc.speciality === speciality))
+      }
     } else {
       setFilterDoc(doctors)
     }
