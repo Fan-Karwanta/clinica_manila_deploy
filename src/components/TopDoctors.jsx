@@ -31,7 +31,7 @@ const TopDoctors = () => {
                                 <span>{item.available ? 'Available' : "Not Available"}</span>
                             </div>
                             <h3 className='mt-3 text-[#262626] text-lg font-medium truncate'>Dr. {item.name} {item.name_extension && <span className="text-gray-500">{item.name_extension}</span>}</h3>
-                            <p className='text-[#5C5C5C] text-sm mt-1'>{item.speciality === 'Internal_Medicine' ? 'Internal Medicine' : item.speciality}</p>
+                            <p className='text-[#5C5C5C] text-sm mt-1'>{item.displaySpeciality || (item.speciality === 'Internal_Medicine' ? 'Internal Medicine' : item.speciality)}</p>
                         </div>
                     </div>
                 ))}

@@ -70,12 +70,26 @@ const AppContextProvider = ({ children }) => {
         setUnreadCount(0);
     };
 
+    // Utility function to format specialty names
+    const formatSpecialty = (specialty) => {
+        // Replace underscores with spaces for display purposes
+        if (specialty === 'Internal_Medicine') {
+            return 'Internal Medicine';
+        }
+        return specialty;
+    };
+
     // Getting Doctors using API
     const getDoctorsData = async () => {
         try {
             const { data } = await axios.get(`${backendUrl}/api/doctor/list`);
             if (data.success) {
-                setDoctors(data.doctors);
+                // Format the specialties for display
+                const formattedDoctors = data.doctors.map(doctor => ({
+                    ...doctor,
+                    displaySpeciality: formatSpecialty(doctor.speciality)
+                }));
+                setDoctors(formattedDoctors);
             } else {
                 toast.error(data.message);
             }
