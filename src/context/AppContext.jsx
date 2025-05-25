@@ -105,25 +105,32 @@ const AppContextProvider = ({ children }) => {
 
     // Getting User Profile using API
     const loadUserProfileData = async () => {
-        if (!token) return;
+        if (!token) return Promise.reject(new Error('No token available'));
         
         try {
-            const { data } = await axios.get(`${backendUrl}/api/user/get-profile`);
+            const { data } = await axios.get(`${backendUrl}/api/user/get-profile`, {
+                headers: { Authorization: token } // Explicitly set the token in headers
+            });
 
             if (data.success) {
                 setUserData(data.userData);
+                return data.userData; // Return the user data for success case
             } else {
-                toast.error(data.message);
-                if (data.message.toLowerCase().includes('auth')) {
+                // Only logout for clear authentication errors
+                if (data.message.toLowerCase().includes('auth') || 
+                    data.message.toLowerCase().includes('token') || 
+                    data.message.toLowerCase().includes('login')) {
                     handleLogout();
                 }
+                throw new Error(data.message);
             }
         } catch (error) {
             console.error('Error loading profile:', error);
+            // Only logout for 401 errors
             if (error.response?.status === 401) {
                 handleLogout();
             }
-            toast.error(error.response?.data?.message || error.message);
+            throw error; // Propagate the error to be handled by the caller
         }
     };
 

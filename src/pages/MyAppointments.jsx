@@ -82,8 +82,15 @@ const MyAppointments = () => {
                     // If loadUserProfileData succeeds, retry getting appointments
                     getUserAppointments()
                 } catch (refreshError) {
-                    setIsAuthenticated(false)
-                    toast.error('Authentication error. Please log in again.')
+                    console.error('Failed to refresh user data:', refreshError)
+                    // Only set isAuthenticated to false if we're sure it's an auth error
+                    if (refreshError.response && refreshError.response.status === 401) {
+                        setIsAuthenticated(false)
+                        toast.error('Authentication error. Please log in again.')
+                    } else {
+                        // For other errors, keep the user logged in but show error
+                        toast.error('Error loading appointments. Please try again.')
+                    }
                 }
             } else {
                 toast.error(error.response?.data?.message || error.message || 'Error loading appointments')
@@ -184,7 +191,11 @@ const MyAppointments = () => {
                     setIsAuthenticated(true)
                     getUserAppointments()
                 } catch (error) {
-                    setIsAuthenticated(false)
+                    console.error('Authentication error:', error)
+                    // Only log out if it's a clear authentication error
+                    if (error.response && error.response.status === 401) {
+                        setIsAuthenticated(false)
+                    }
                     setIsLoading(false)
                 }
             } else {
