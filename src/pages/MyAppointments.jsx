@@ -290,7 +290,7 @@ const MyAppointments = () => {
                         </div>
                         <div className='flex-1 text-sm text-[#5E5E5E]'>
                             <p className='text-[#262626] text-base font-semibold'>Dr. {item.docData.name}</p>
-                            <p>{item.docData.speciality}</p>
+                            <p>{item.docData.speciality ? item.docData.speciality.replace(/_/g, ' ') : ''}</p>
                             <p className='text-[#464646] font-medium mt-1'>Address:</p>
                             <p className=''>{item.docData.address.line1}</p>
                             <p className=''>{item.docData.address.line2}</p>
